@@ -103,7 +103,12 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
     machine à états REPOS/REGULATION/ALARME. Testé à **2 niveaux** : test unitaire natif
     g++ (`tests/test_regulation_unit.cpp`, 9/9 déterministe) + intégration Wokwi
     (`tests/run_regulation_tests.sh`, incl. ALARME via `--diagram-file`).
-  - Prochain : **FP4 actionneur (ventilateur PWM sur D9)**.
+  - **Module 4 — FP4 actionneur ✅** (`src/actionneur.h/.cpp`). PWM sur D9. En sim, Wokwi
+    n'a pas de moteur CC → LED proxy de vitesse ; étage de puissance réel (MOSFET+diode)
+    documenté dans `architecture.md §3`. EF4 vérifiée par **VCD** (analyseur logique +
+    `tests/mesure_duty.py`, rapport cyclique 49,4 % à PWM=126). Ordonnanceur 100 ms/500 ms
+    en place (EP1, EC3).
+  - Prochain : **FP5 affichage LCD (I²C)**, puis **FP6 LED d'alarme**, puis intégration finale.
 - **Astuce testabilité** : le module `regulation.cpp` n'inclut que `<math.h>` (aucune API
   Arduino) → compilable sur PC pour tests unitaires natifs. Le potentiomètre est pilotable
   dynamiquement (`set-control position` 0–1), le NTC non (température init-only → on relance

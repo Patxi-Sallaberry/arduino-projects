@@ -17,6 +17,20 @@
       "top": 120,
       "left": 130,
       "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_fan",
+      "top": -200,
+      "left": 250,
+      "attrs": { "color": "green", "label": "ventilateur (proxy vitesse)" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_fan",
+      "top": -150,
+      "left": 240,
+      "attrs": { "value": "220" }
     }
   ],
   "connections": [
@@ -25,6 +39,9 @@
     [ "ntc1:OUT", "uno:A0", "green", [] ],
     [ "pot1:GND", "uno:GND.2", "black", [] ],
     [ "pot1:VCC", "uno:5V", "red", [] ],
-    [ "pot1:SIG", "uno:A1", "green", [] ]
+    [ "pot1:SIG", "uno:A1", "green", [] ],
+    [ "uno:9", "r_fan:1", "green", [] ],
+    [ "r_fan:2", "led_fan:A", "green", [] ],
+    [ "led_fan:C", "uno:GND.3", "black", [] ]
   ]
 }

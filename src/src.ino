@@ -1,47 +1,57 @@
 // ============================================================================
-//  Régulateur proportionnel de vitesse de ventilateur
-//  ÉTAPE 3 — Test de la régulation : mesure (FP1) + consigne (FP2) + loi P (FP3)
+//  Régulateur proportionnel de vitesse de ventilateur — croquis principal
+//  Chaîne complète : mesure (FP1) + consigne (FP2) + régulation (FP3) +
+//  ventilateur (FP4). LCD (FP5) et LED d'alarme (FP6) ajoutés ensuite.
 //
-//  Ce croquis lit la température et la consigne, calcule la commande de
-//  régulation et l'état, et les affiche sur la liaison série. Le ventilateur
-//  (FP4), le LCD (FP5) et la LED (FP6) viendront ensuite.
-//  NB : la cadence de régulation à 100 ms (EP1) sera figée lors de l'intégration
-//  finale de l'actionneur ; ici on calcule au rythme d'affichage (500 ms).
+//  Ordonnancement NON BLOQUANT à deux cadences (EP1, EC3) :
+//    - régulation : toutes les 100 ms (mesurer -> décider -> agir)
+//    - affichage  : toutes les 500 ms (restituer)
+//  Aucun delay() : tout est cadencé par comparaison de millis().
 // ============================================================================
 
 #include "capteur_temp.h"
 #include "consigne.h"
 #include "regulation.h"
+#include "actionneur.h"
 
-const unsigned long PERIODE_AFFICHAGE_MS = 500;
-unsigned long dernierAffichage = 0;
+const unsigned long PERIODE_REGULATION_MS = 100;  // EP1 : boucle à 10 Hz
+const unsigned long PERIODE_AFFICHAGE_MS  = 500;  // EF6 : trace toutes les 500 ms
+
+unsigned long derniereRegulation = 0;
+unsigned long dernierAffichage   = 0;
+
+// État courant, partagé entre la boucle de régulation et l'affichage.
+SortieRegulation regCourante = { 0.0f, 0, REPOS };
+float tempCourante     = 0.0f;
+float consigneCourante = 0.0f;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("== Test regulation : FP1 + FP2 + FP3 ==");
+  initialiserActionneur();
+  Serial.println("== Regulateur ventilateur : FP1..FP4 ==");
 }
 
 void loop() {
   unsigned long maintenant = millis();
 
-  // Ordonnancement non bloquant (soustraction non signée = robuste au débordement).
+  // --- Boucle de RÉGULATION (100 ms) : mesurer -> décider -> agir ---
+  if (maintenant - derniereRegulation >= PERIODE_REGULATION_MS) {
+    derniereRegulation = maintenant;
+
+    tempCourante     = lireTemperature();
+    consigneCourante = lireConsigne();
+    regCourante      = calculerRegulation(tempCourante, consigneCourante);
+    appliquerCommande(regCourante.commande);      // FP4 : PWM vers le ventilateur
+  }
+
+  // --- AFFICHAGE (500 ms) : restituer l'état ---
   if (maintenant - dernierAffichage >= PERIODE_AFFICHAGE_MS) {
     dernierAffichage = maintenant;
 
-    float tempC     = lireTemperature();
-    float consigneC = lireConsigne();
-    SortieRegulation reg = calculerRegulation(tempC, consigneC);
-
-    // Trace parsable : T | Consigne | erreur | PWM | ETAT
-    Serial.print("T=");
-    Serial.print(tempC, 1);
-    Serial.print(" C | Cons=");
-    Serial.print(consigneC, 1);
-    Serial.print(" C | e=");
-    Serial.print(reg.erreur, 1);
-    Serial.print(" | PWM=");
-    Serial.print(reg.commande);
-    Serial.print(" | ETAT=");
-    Serial.println(nomEtat(reg.etat));
+    Serial.print("T=");        Serial.print(tempCourante, 1);
+    Serial.print(" C | Cons="); Serial.print(consigneCourante, 1);
+    Serial.print(" C | e=");    Serial.print(regCourante.erreur, 1);
+    Serial.print(" | PWM=");    Serial.print(regCourante.commande);
+    Serial.print(" | ETAT=");   Serial.println(nomEtat(regCourante.etat));
   }
 }

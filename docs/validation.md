@@ -15,16 +15,16 @@
 | **EF1** | Mesurer la température (plage 0–60 °C) | ✅ | §1 ci-dessous |
 | **EF2** | Régler la consigne (potentiomètre → 20–45 °C) | ✅ | §2 ci-dessous |
 | **EF3** | Loi proportionnelle (BP = 5 °C) | ✅ | §3 ci-dessous |
-| **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ⬜ | — |
+| **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ✅ | §4 ci-dessous |
 | **EF5** | Afficher sur LCD | ⬜ | — |
-| **EF6** | Tracer sur Serial (500 ms) | 🟡 | Trace série fonctionnelle dès le module FP1 (format à figer) |
+| **EF6** | Tracer sur Serial (500 ms) | ✅ | Ligne parsable `T=.. \| Cons=.. \| e=.. \| PWM=.. \| ETAT=..` toutes les 500 ms |
 | **EF7** | Alarme de seuil (e ≥ 8 °C) | ⬜ | — |
-| **EP1** | Boucle 100 ms non bloquante | 🟡 | Patron `millis()` en place (module FP1), période à mesurer sur cycle complet |
+| **EP1** | Boucle 100 ms non bloquante | ✅ | Ordonnanceur 2 cadences (régul. 100 ms / affichage 500 ms) par `millis()` dans `src.ino` |
 | **EP2** | Erreur statique ≤ 2 °C | ⬜ | — |
 | **EP3** | Réaction ≤ 1 cycle | ⬜ | — |
 | **EC1** | Compile sans erreur (Uno) | ✅ | §1 (compilation `arduino-cli`, exit 0) |
 | **EC2** | Code modulaire multi-fichiers | 🟡 | Module `capteur_temp.h/.cpp` séparé du `.ino` (à compléter) |
-| **EC3** | Aucun `delay()` bloquant | 🟡 | Respecté dans le module FP1 (à re-vérifier au global) |
+| **EC3** | Aucun `delay()` bloquant | ✅ | `grep delay( src/` → aucune occurrence (hors commentaire) |
 | **EC4** | Testabilité (scénario wokwi-cli) | 🟡 | `tests/test_capteur.yaml` opérationnel |
 | **EC5** | Machine à états explicite | ✅ | §3 : états REPOS/REGULATION/ALARME nommés, transitions testées |
 
@@ -144,3 +144,32 @@ Les deux sont nécessaires et ne se remplacent pas.
 **Outil — capture visuelle** : `wokwi-cli --screenshot-part <id> --screenshot-time <ms>
 --screenshot-file <png>` produit un PNG de la carte (vérifié fonctionnel). Sera utilisé
 pour illustrer l'état de la LED (FP6) et du LCD (FP5) une fois câblés.
+
+---
+
+## §4 — EF4 / EP1 : Commande du ventilateur en PWM (module `actionneur`)
+
+**Principe** : `appliquerCommande(pwm)` = `analogWrite(D9, pwm)`. Sur matériel réel D9
+attaque un MOSFET (+ diode de roue libre) ; en simulation, faute de moteur CC dans Wokwi,
+une LED sur D9 visualise le rapport cyclique (proxy de vitesse). Cf. `architecture.md §3`.
+
+**Vérification du rapport cyclique réel (EF4)** — `tests/run_actionneur_test.sh` :
+un **analyseur logique** (`tests/diagram_vcd.json`) capture D9, exporté en **VCD**, dont
+on mesure le rapport cyclique en régime établi (`tests/mesure_duty.py`).
+
+| Consigne (pot 0.1) | Écart e | PWM attendu | Rapport cyclique mesuré sur D9 |
+|:---:|:---:|:---:|:---:|
+| 22,5 °C | 2,5 °C | 126/255 | **49,4 %** (attendu 49,4 % ±3) → ✅ |
+
+```
+Rapport cyclique D9 (regime etabli 250 ms) : 49.4 % (attendu 49.4 +/- 3.0)  [OK]
+```
+
+*Finesse mesurée* : sur la fenêtre complète on lisait 39 % — car elle incluait le
+**transitoire de démarrage** (~100 ms à PWM=0 avant le 1ᵉʳ cycle de régulation). En
+excluant le transitoire (mesure sur les derniers 250 ms), on retrouve 49,4 % exact.
+→ **EF4 validée.**
+
+**Ordonnancement (EP1, EC3)** : `src.ino` cadence la régulation à **100 ms** et
+l'affichage à **500 ms** par comparaison de `millis()`, **sans aucun `delay()`**
+(vérifié par `grep`). → **EP1 et EC3 validées.**
