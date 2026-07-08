@@ -13,6 +13,7 @@
 #include "consigne.h"
 #include "regulation.h"
 #include "actionneur.h"
+#include "alarme.h"
 
 const unsigned long PERIODE_REGULATION_MS = 100;  // EP1 : boucle à 10 Hz
 const unsigned long PERIODE_AFFICHAGE_MS  = 500;  // EF6 : trace toutes les 500 ms
@@ -28,7 +29,8 @@ float consigneCourante = 0.0f;
 void setup() {
   Serial.begin(9600);
   initialiserActionneur();
-  Serial.println("== Regulateur ventilateur : FP1..FP4 ==");
+  initialiserAlarme();
+  Serial.println("== Regulateur ventilateur : FP1..FP6 ==");
 }
 
 void loop() {
@@ -42,6 +44,7 @@ void loop() {
     consigneCourante = lireConsigne();
     regCourante      = calculerRegulation(tempCourante, consigneCourante);
     appliquerCommande(regCourante.commande);      // FP4 : PWM vers le ventilateur
+    majAlarme(regCourante.etat);                  // FP6 : LED d'alarme sur seuil
   }
 
   // --- AFFICHAGE (500 ms) : restituer l'état ---

@@ -18,7 +18,7 @@
 | **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ✅ | §4 ci-dessous |
 | **EF5** | Afficher sur LCD | ⬜ | — |
 | **EF6** | Tracer sur Serial (500 ms) | ✅ | Ligne parsable `T=.. \| Cons=.. \| e=.. \| PWM=.. \| ETAT=..` toutes les 500 ms |
-| **EF7** | Alarme de seuil (e ≥ 8 °C) | ⬜ | — |
+| **EF7** | Alarme de seuil (e ≥ 8 °C) | ✅ | §5 ci-dessous |
 | **EP1** | Boucle 100 ms non bloquante | ✅ | Ordonnanceur 2 cadences (régul. 100 ms / affichage 500 ms) par `millis()` dans `src.ino` |
 | **EP2** | Erreur statique ≤ 2 °C | ⬜ | — |
 | **EP3** | Réaction ≤ 1 cycle | ⬜ | — |
@@ -173,3 +173,25 @@ excluant le transitoire (mesure sur les derniers 250 ms), on retrouve 49,4 % exa
 **Ordonnancement (EP1, EC3)** : `src.ino` cadence la régulation à **100 ms** et
 l'affichage à **500 ms** par comparaison de `millis()`, **sans aucun `delay()`**
 (vérifié par `grep`). → **EP1 et EC3 validées.**
+
+---
+
+## §5 — EF7 : LED d'alarme (module `alarme`)
+
+**Principe** : `majAlarme(etat)` = `digitalWrite(D8, etat == ALARME ? HIGH : LOW)`.
+
+**Vérification de l'état réel de la broche D8** — `tests/run_alarme_test.sh` : l'état
+final de D8 est lu dans le VCD (`tests/verifie_pin.py`) selon la température du procédé :
+
+| Cas | T procédé | Consigne | État | Broche D8 (LED) | Résultat |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Alarme | 35 °C | 20 °C | ALARME (e=15) | **1 (allumée)** | ✅ |
+| Hors alarme | 25 °C | 20 °C | REGULATION (e=5) | **0 (éteinte)** | ✅ |
+
+```
+Etat final D1 (= broche D8, LED alarme) : 1 (attendu 1)  [OK]
+Etat final D1 (= broche D8, LED alarme) : 0 (attendu 0)  [OK]
+########## FP6 : LED alarme OK ##########
+```
+
+→ **EF7 validée.**

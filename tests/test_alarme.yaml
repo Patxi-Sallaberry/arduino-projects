@@ -1,0 +1,13 @@
+name: 'FP6 — Consigne au minimum (pot 0.0 -> 20 °C)'
+version: 1
+author: 'Patxi-Sallaberry'
+
+# Scénario partagé : consigne au minimum. Combiné à la température du diagramme :
+#   - diagram_alarme.json (35 °C) -> e=15 -> ALARME  -> LED D8 allumée
+#   - diagram.json        (25 °C) -> e=5  -> REGUL   -> LED D8 éteinte
+steps:
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0
+  - delay: 700ms

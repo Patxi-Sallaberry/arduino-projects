@@ -4,34 +4,13 @@
   "editor": "wokwi",
   "parts": [
     { "type": "wokwi-arduino-uno", "id": "uno", "top": 0, "left": 0, "attrs": {} },
-    {
-      "type": "wokwi-ntc-temperature-sensor",
-      "id": "ntc1",
-      "top": -120,
-      "left": 130,
-      "attrs": { "temperature": "25" }
-    },
-    {
-      "type": "wokwi-potentiometer",
-      "id": "pot1",
-      "top": 120,
-      "left": 130,
-      "attrs": {}
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led_fan",
-      "top": -200,
-      "left": 250,
-      "attrs": { "color": "green", "label": "ventilateur (proxy vitesse)" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r_fan",
-      "top": -150,
-      "left": 240,
-      "attrs": { "value": "220" }
-    }
+    { "type": "wokwi-ntc-temperature-sensor", "id": "ntc1", "top": -120, "left": 130, "attrs": { "temperature": "25" } },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": 120, "left": 130, "attrs": {} },
+    { "type": "wokwi-led", "id": "led_fan", "top": -200, "left": 250, "attrs": { "color": "green", "label": "ventilateur" } },
+    { "type": "wokwi-resistor", "id": "r_fan", "top": -150, "left": 240, "attrs": { "value": "220" } },
+    { "type": "wokwi-led", "id": "led_alarme", "top": -100, "left": 250, "attrs": { "color": "red", "label": "alarme" } },
+    { "type": "wokwi-resistor", "id": "r_alarme", "top": -60, "left": 240, "attrs": { "value": "220" } },
+    { "type": "wokwi-logic-analyzer", "id": "la1", "top": 260, "left": 0, "attrs": {} }
   ],
   "connections": [
     [ "ntc1:GND", "uno:GND.1", "black", [] ],
@@ -42,6 +21,11 @@
     [ "pot1:SIG", "uno:A1", "green", [] ],
     [ "uno:9", "r_fan:1", "green", [] ],
     [ "r_fan:2", "led_fan:A", "green", [] ],
-    [ "led_fan:C", "uno:GND.3", "black", [] ]
+    [ "led_fan:C", "uno:GND.3", "black", [] ],
+    [ "uno:8", "r_alarme:1", "orange", [] ],
+    [ "r_alarme:2", "led_alarme:A", "orange", [] ],
+    [ "led_alarme:C", "uno:GND.3", "black", [] ],
+    [ "uno:9", "la1:D0", "green", [] ],
+    [ "uno:8", "la1:D1", "orange", [] ]
   ]
 }

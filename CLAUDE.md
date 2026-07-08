@@ -108,7 +108,12 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
     documenté dans `architecture.md §3`. EF4 vérifiée par **VCD** (analyseur logique +
     `tests/mesure_duty.py`, rapport cyclique 49,4 % à PWM=126). Ordonnanceur 100 ms/500 ms
     en place (EP1, EC3).
-  - Prochain : **FP5 affichage LCD (I²C)**, puis **FP6 LED d'alarme**, puis intégration finale.
+  - **Module 5 — FP6 alarme ✅** (`src/alarme.h/.cpp`). LED rouge sur D8, allumée SSI état
+    ALARME. Vérifié par état réel de la broche D8 dans le VCD (`tests/run_alarme_test.sh`).
+  - Prochain : **FP5 affichage LCD I²C** (dernier module, introduit une librairie externe),
+    puis README + finalisation.
+- **Diagrammes** : `diagram.json` (procédé 25 °C) et `tests/diagram_alarme.json` (35 °C),
+  tous deux avec LED ventilateur (D9), LED alarme (D8) et analyseur logique (D0=D9, D1=D8).
 - **Astuce testabilité** : le module `regulation.cpp` n'inclut que `<math.h>` (aucune API
   Arduino) → compilable sur PC pour tests unitaires natifs. Le potentiomètre est pilotable
   dynamiquement (`set-control position` 0–1), le NTC non (température init-only → on relance

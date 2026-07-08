@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 arduino-cli compile --fqbn arduino:avr:uno --output-dir build src/ >/dev/null 2>&1 \
   || { echo "compilation firmware KO"; exit 1; }
 
-wokwi-cli . --diagram-file tests/diagram_vcd.json \
+wokwi-cli . \
              --scenario tests/test_actionneur_vcd.yaml \
              --vcd-file build/d9.vcd --timeout 1500 >/dev/null 2>&1 \
   || { echo "capture VCD KO"; exit 1; }
