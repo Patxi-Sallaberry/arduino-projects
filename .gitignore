@@ -1,0 +1,21 @@
+# --- Artefacts de compilation Arduino ---
+# arduino-cli --output-dir build/ produit ces fichiers : ce sont des
+# sorties reproductibles à partir des sources, donc jamais versionnées.
+build/
+*.hex          # firmware compilé (Intel HEX), régénérable
+*.elf          # exécutable avec symboles de debug, régénérable
+*.bin          # image binaire brute
+*.eep          # contenu EEPROM
+*.map          # carte mémoire de l'éditeur de liens
+*.d            # fichiers de dépendances générés
+
+# --- Environnement / outils ---
+.DS_Store      # métadonnées macOS (au cas où tu échanges des fichiers)
+*.log
+.vscode/*      # config VS Code personnelle...
+!.vscode/extensions.json   # ...mais on garde la liste d'extensions recommandées
+
+# --- Secrets ---
+# Le token Wokwi est dans ~/.bashrc, pas ici, mais par sécurité :
+.env
+*.token
