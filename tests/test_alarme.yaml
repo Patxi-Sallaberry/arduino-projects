@@ -10,4 +10,4 @@ steps:
       part-id: pot1
       control: position
       value: 0
-  - delay: 700ms
+  - delay: 1600ms

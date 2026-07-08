@@ -110,8 +110,14 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
     en place (EP1, EC3).
   - **Module 5 — FP6 alarme ✅** (`src/alarme.h/.cpp`). LED rouge sur D8, allumée SSI état
     ALARME. Vérifié par état réel de la broche D8 dans le VCD (`tests/run_alarme_test.sh`).
-  - Prochain : **FP5 affichage LCD I²C** (dernier module, introduit une librairie externe),
-    puis README + finalisation.
+  - **Module 6 — FP5 affichage LCD I²C ✅** (`src/affichage.h/.cpp`). Librairie externe
+    `LiquidCrystal_I2C` (0x27), bus I²C A4/A5. Preuve visuelle par screenshots
+    (`docs/img/lcd_*.png`).
+- **✅ PROJET COMPLET** : les 7 fonctions livrées et testées. **14/15 exigences validées**
+  (seule réserve : EP2 erreur statique, non validable en sim — voir `validation.md §7`).
+  README.md rédigé. Dépôt à jour sur GitHub.
+- **Évolutions identifiées** (hors périmètre) : régulateur PID (annule l'erreur statique),
+  banc de test thermique pour la boucle fermée dynamique, matériel réel.
 - **Diagrammes** : `diagram.json` (procédé 25 °C) et `tests/diagram_alarme.json` (35 °C),
   tous deux avec LED ventilateur (D9), LED alarme (D8) et analyseur logique (D0=D9, D1=D8).
 - **Astuce testabilité** : le module `regulation.cpp` n'inclut que `<math.h>` (aucune API

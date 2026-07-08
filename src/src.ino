@@ -14,6 +14,7 @@
 #include "regulation.h"
 #include "actionneur.h"
 #include "alarme.h"
+#include "affichage.h"
 
 const unsigned long PERIODE_REGULATION_MS = 100;  // EP1 : boucle à 10 Hz
 const unsigned long PERIODE_AFFICHAGE_MS  = 500;  // EF6 : trace toutes les 500 ms
@@ -30,7 +31,8 @@ void setup() {
   Serial.begin(9600);
   initialiserActionneur();
   initialiserAlarme();
-  Serial.println("== Regulateur ventilateur : FP1..FP6 ==");
+  initialiserAffichage();
+  Serial.println("== Regulateur ventilateur : systeme complet ==");
 }
 
 void loop() {
@@ -51,6 +53,10 @@ void loop() {
   if (maintenant - dernierAffichage >= PERIODE_AFFICHAGE_MS) {
     dernierAffichage = maintenant;
 
+    // FP5 : restitution autonome sur l'écran LCD.
+    majAffichage(tempCourante, consigneCourante, regCourante.commande, regCourante.etat);
+
+    // Restitution sur la liaison série (dev + tests).
     Serial.print("T=");        Serial.print(tempCourante, 1);
     Serial.print(" C | Cons="); Serial.print(consigneCourante, 1);
     Serial.print(" C | e=");    Serial.print(regCourante.erreur, 1);

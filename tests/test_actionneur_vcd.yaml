@@ -3,10 +3,10 @@ version: 1
 author: 'Patxi-Sallaberry'
 
 # Règle le potentiomètre pour viser ~50 % de PWM, laisse la régulation converger,
-# le tout capturé par l'analyseur logique du diagramme diagram_vcd.json (-> VCD).
+# le tout capturé par l'analyseur logique du diagramme principal (analyseur logique intégré) (-> VCD).
 steps:
   - set-control:
       part-id: pot1
       control: position
       value: 0.1
-  - delay: 600ms
+  - delay: 1600ms

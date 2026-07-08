@@ -14,13 +14,13 @@ arduino-cli compile --fqbn arduino:avr:uno --output-dir build src/ >/dev/null 2>
 
 echo "--- Cas ALARME (T=35 C, consigne mini) : LED attendue ALLUMEE ---"
 wokwi-cli . --diagram-file tests/diagram_alarme.json --scenario tests/test_alarme.yaml \
-             --vcd-file build/alarme.vcd --timeout 1500 >/dev/null 2>&1 \
+             --vcd-file build/alarme.vcd --timeout 2600 >/dev/null 2>&1 \
   || { echo "capture VCD (alarme) KO"; exit 1; }
 python3 tests/verifie_pin.py build/alarme.vcd D1 1 || fail=1
 
 echo "--- Cas hors alarme (T=25 C, consigne mini -> REGULATION) : LED attendue ETEINTE ---"
 wokwi-cli . --scenario tests/test_alarme.yaml \
-             --vcd-file build/regul.vcd --timeout 1500 >/dev/null 2>&1 \
+             --vcd-file build/regul.vcd --timeout 2600 >/dev/null 2>&1 \
   || { echo "capture VCD (regul) KO"; exit 1; }
 python3 tests/verifie_pin.py build/regul.vcd D1 0 || fail=1
 

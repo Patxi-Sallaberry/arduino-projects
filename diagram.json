@@ -10,7 +10,8 @@
     { "type": "wokwi-resistor", "id": "r_fan", "top": -150, "left": 240, "attrs": { "value": "220" } },
     { "type": "wokwi-led", "id": "led_alarme", "top": -100, "left": 250, "attrs": { "color": "red", "label": "alarme" } },
     { "type": "wokwi-resistor", "id": "r_alarme", "top": -60, "left": 240, "attrs": { "value": "220" } },
-    { "type": "wokwi-logic-analyzer", "id": "la1", "top": 260, "left": 0, "attrs": {} }
+    { "type": "wokwi-logic-analyzer", "id": "la1", "top": 260, "left": 0, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd1", "top": -320, "left": 0, "attrs": { "pins": "i2c" } }
   ],
   "connections": [
     [ "ntc1:GND", "uno:GND.1", "black", [] ],
@@ -26,6 +27,10 @@
     [ "r_alarme:2", "led_alarme:A", "orange", [] ],
     [ "led_alarme:C", "uno:GND.3", "black", [] ],
     [ "uno:9", "la1:D0", "green", [] ],
-    [ "uno:8", "la1:D1", "orange", [] ]
+    [ "uno:8", "la1:D1", "orange", [] ],
+    [ "lcd1:GND", "uno:GND.3", "black", [] ],
+    [ "lcd1:VCC", "uno:5V", "red", [] ],
+    [ "lcd1:SDA", "uno:A4", "blue", [] ],
+    [ "lcd1:SCL", "uno:A5", "yellow", [] ]
   ]
 }

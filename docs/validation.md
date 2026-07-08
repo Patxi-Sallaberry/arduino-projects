@@ -16,16 +16,16 @@
 | **EF2** | Régler la consigne (potentiomètre → 20–45 °C) | ✅ | §2 ci-dessous |
 | **EF3** | Loi proportionnelle (BP = 5 °C) | ✅ | §3 ci-dessous |
 | **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ✅ | §4 ci-dessous |
-| **EF5** | Afficher sur LCD | ⬜ | — |
+| **EF5** | Afficher sur LCD | ✅ | §6 ci-dessous |
 | **EF6** | Tracer sur Serial (500 ms) | ✅ | Ligne parsable `T=.. \| Cons=.. \| e=.. \| PWM=.. \| ETAT=..` toutes les 500 ms |
 | **EF7** | Alarme de seuil (e ≥ 8 °C) | ✅ | §5 ci-dessous |
 | **EP1** | Boucle 100 ms non bloquante | ✅ | Ordonnanceur 2 cadences (régul. 100 ms / affichage 500 ms) par `millis()` dans `src.ino` |
-| **EP2** | Erreur statique ≤ 2 °C | ⬜ | — |
-| **EP3** | Réaction ≤ 1 cycle | ⬜ | — |
+| **EP2** | Erreur statique ≤ 2 °C | ⚠️ | Non validable en simulation — voir §7 (limite) |
+| **EP3** | Réaction ≤ 1 cycle | ✅ | Ordonnanceur 100 ms : la commande est recalculée à chaque cycle (observé aux tests FP3/FP4) |
 | **EC1** | Compile sans erreur (Uno) | ✅ | §1 (compilation `arduino-cli`, exit 0) |
-| **EC2** | Code modulaire multi-fichiers | 🟡 | Module `capteur_temp.h/.cpp` séparé du `.ino` (à compléter) |
+| **EC2** | Code modulaire multi-fichiers | ✅ | 6 modules `.h/.cpp` (capteur_temp, consigne, regulation, actionneur, alarme, affichage) + `.ino` d'orchestration |
 | **EC3** | Aucun `delay()` bloquant | ✅ | `grep delay( src/` → aucune occurrence (hors commentaire) |
-| **EC4** | Testabilité (scénario wokwi-cli) | 🟡 | `tests/test_capteur.yaml` opérationnel |
+| **EC4** | Testabilité (scénario wokwi-cli) | ✅ | Suite complète : scénarios YAML + test unitaire natif + mesures VCD |
 | **EC5** | Machine à états explicite | ✅ | §3 : états REPOS/REGULATION/ALARME nommés, transitions testées |
 
 ---
@@ -195,3 +195,72 @@ Etat final D1 (= broche D8, LED alarme) : 0 (attendu 0)  [OK]
 ```
 
 → **EF7 validée.**
+
+---
+
+## §6 — EF5 : Affichage LCD 16x2 I²C (module `affichage`)
+
+**Principe** : librairie externe `LiquidCrystal_I2C` (adresse 0x27) sur le bus I²C
+(A4 = SDA, A5 = SCL). Deux lignes, largeur fixe 16 caractères (padding `%-16s` pour
+effacer les résidus). Rafraîchi toutes les 500 ms.
+
+**Preuve visuelle** (captures headless `wokwi-cli --screenshot-part lcd1`) :
+
+État régulation (procédé 25 °C, consigne 22,5 °C) :
+
+![LCD en régulation](img/lcd_regulation.png)
+
+```
+T:25.0 C:22.5
+Vt:49% REGUL
+```
+
+État alarme (procédé 35 °C, consigne 20 °C) :
+
+![LCD en alarme](img/lcd_alarme.png)
+
+```
+T:35.0 C:20.0
+Vt:100% ALARM
+```
+
+→ **EF5 validée.**
+
+*Effet de bord constaté* : l'`init()` de la librairie LCD contient des `delay()`
+internes (init du contrôleur I²C) qui rallongent `setup()`. Cela n'affecte pas la boucle
+(aucun `delay()` dans `loop()`), mais a imposé d'allonger les fenêtres de capture VCD des
+tests FP4/FP6 (le régime établi arrive plus tard).
+
+---
+
+## §7 — EP2 : erreur statique — limite de validation assumée
+
+**EP2 (`|e| ≤ 2 °C` en régime établi) n'est PAS validée en simulation**, pour deux
+raisons cumulées, honnêtement documentées :
+
+1. **Pas de boucle fermée dynamique possible** : le capteur NTC de Wokwi n'est pilotable
+   qu'à l'initialisation (cf. §1) et Wokwi n'a pas de moteur/procédé thermique. On ne peut
+   donc pas faire *réagir* la température au ventilateur pour observer la convergence.
+2. **Le régulateur proportionnel seul laisse, par principe, une erreur statique non nulle**
+   (cf. `cahier-des-charges.md §3`). Garantir `|e| ≤ 2 °C` dépend du gain et de la
+   dynamique du procédé réel.
+
+**Comment la valider** : sur matériel réel (procédé thermique + ventilateur), ou en
+ajoutant un **modèle thermique** au banc de test, puis en mesurant l'écart en régime
+établi. C'est aussi le point d'entrée naturel vers un **terme intégral (PI/PID)** pour
+annuler cette erreur — évolution déjà identifiée hors périmètre.
+
+---
+
+## Synthèse
+
+| Catégorie | Validées | Réserve |
+|---|---|---|
+| Fonctionnelles (EF1–EF7) | **7 / 7** ✅ | — |
+| Performance (EP1, EP3) | **2 / 3** ✅ | EP2 ⚠️ (non validable en sim, cf. §7) |
+| Conception (EC1–EC5) | **5 / 5** ✅ | — |
+
+**14 exigences sur 15 validées**, la seule réserve (EP2) étant une **limite intrinsèque
+de la simulation + du régulateur P**, clairement tracée et assortie de la voie de
+résolution (PID + banc thermique). Le système remplit son cahier des charges dans le
+périmètre défini.
