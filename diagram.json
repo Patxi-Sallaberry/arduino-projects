@@ -10,11 +10,21 @@
       "top": -120,
       "left": 130,
       "attrs": { "temperature": "25" }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 120,
+      "left": 130,
+      "attrs": {}
     }
   ],
   "connections": [
     [ "ntc1:GND", "uno:GND.1", "black", [] ],
     [ "ntc1:VCC", "uno:5V", "red", [] ],
-    [ "ntc1:OUT", "uno:A0", "green", [] ]
+    [ "ntc1:OUT", "uno:A0", "green", [] ],
+    [ "pot1:GND", "uno:GND.2", "black", [] ],
+    [ "pot1:VCC", "uno:5V", "red", [] ],
+    [ "pot1:SIG", "uno:A1", "green", [] ]
   ]
 }

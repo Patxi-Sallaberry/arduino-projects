@@ -93,9 +93,13 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
 - **Docs cycle en V** : besoin ✅, cahier des charges ✅, analyse fonctionnelle ✅,
   architecture ✅ (capteur = **NTC** analogique confirmé). `docs/validation.md` ouvert
   et tenu à jour au fil des modules.
-- **Code** : **Module 1 — FP1 acquisition NTC ✅** (`src/capteur_temp.h/.cpp`, `src/src.ino`).
-  Compile (arduino-cli, exit 0), conversion validée 0/25/50 °C, test `tests/test_capteur.yaml`
-  au vert. Prochain : **FP2 consigne (potentiomètre)**.
+- **Code** :
+  - **Module 1 — FP1 acquisition NTC ✅** (`src/capteur_temp.h/.cpp`). Conversion validée
+    0/25/50 °C, `tests/test_capteur.yaml` au vert.
+  - **Module 2 — FP2 consigne potentiomètre ✅** (`src/consigne.h/.cpp`). Interpolation
+    flottante 20–45 °C (pas de `map()`), `tests/test_consigne.yaml` au vert (potentiomètre
+    pilotable par `set-control position`).
+  - Prochain : **FP3 régulation (écart + loi proportionnelle + machine à états)**.
 - **Câblage retenu** : A0=NTC, A1=potentiomètre, A4/A5=I²C LCD, D9=PWM ventilateur,
   D8=LED alarme.
 - **⚠️ Limite outil connue** : le capteur NTC Wokwi n'est pas pilotable dynamiquement

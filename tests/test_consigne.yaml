@@ -1,0 +1,32 @@
+name: 'FP2 — Consigne potentiomètre : butées et milieu'
+version: 1
+author: 'Patxi-Sallaberry'
+
+# Vérifie EF2 : la position du potentiomètre (contrôle "position", 0.0..1.0)
+# se convertit linéairement en consigne 20..45 °C. Contrairement au capteur NTC,
+# le potentiomètre EST pilotable dynamiquement -> test 100% automatique.
+
+steps:
+  # Butée basse -> consigne mini
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0
+  - delay: 700ms
+  - wait-serial: 'Cons=20.0 C'
+
+  # Milieu -> ~32.5 °C
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0.5
+  - delay: 700ms
+  - wait-serial: 'Cons=32.5 C'
+
+  # Butée haute -> consigne maxi
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 1
+  - delay: 700ms
+  - wait-serial: 'Cons=45.0 C'

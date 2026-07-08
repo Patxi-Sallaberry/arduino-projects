@@ -13,7 +13,7 @@
 | ID | Exigence | Statut | Preuve |
 |----|----------|:------:|--------|
 | **EF1** | Mesurer la température (plage 0–60 °C) | ✅ | §1 ci-dessous |
-| **EF2** | Régler la consigne (potentiomètre → 20–45 °C) | ⬜ | — |
+| **EF2** | Régler la consigne (potentiomètre → 20–45 °C) | ✅ | §2 ci-dessous |
 | **EF3** | Loi proportionnelle (BP = 5 °C) | ⬜ | — |
 | **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ⬜ | — |
 | **EF5** | Afficher sur LCD | ⬜ | — |
@@ -71,3 +71,31 @@ surtout, on ne pourra pas faire évoluer la température **en réaction** au ven
 tester la boucle fermée (EP2, EP3). Stratégie de test en boucle fermée **à trancher au
 module régulation** (options envisagées : modèle thermique logiciel injecté en mode test ;
 capteur pilotable type DS18B20 ; banc de test dédié). Voir `architecture.md §7`.
+
+---
+
+## §2 — EF2 : Acquisition de la consigne (module `consigne`)
+
+**Principe** : potentiomètre sur A1, position → consigne 20–45 °C par interpolation
+**flottante** (pas de `map()` entier, cf. code commenté).
+
+**Test automatisé (EC4)** — `wokwi-cli . --scenario tests/test_consigne.yaml`.
+Contrairement au NTC, le potentiomètre Wokwi **est pilotable** (contrôle `position`,
+0.0–1.0), donc test **100 % automatique** :
+
+| Position potentiomètre | Consigne lue | Attendu | Résultat |
+|:---:|:---:|:---:|:---:|
+| 0.0 (butée basse) | **20.0 °C** | 20,0 °C | ✅ |
+| 0.5 (milieu)      | **32.5 °C** | 32,5 °C | ✅ |
+| 1.0 (butée haute) | **45.0 °C** | 45,0 °C | ✅ |
+
+```
+Expected text matched: "Cons=20.0 C"
+Expected text matched: "Cons=32.5 C"
+Expected text matched: "Cons=45.0 C"
+Scenario completed successfully  (exit 0)
+```
+
+→ Conversion linéaire correcte sur toute la plage : **EF2 validée**.
+Non-régression FP1 vérifiée après changement du format d'affichage (test EF1 toujours
+au vert).
