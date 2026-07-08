@@ -1,0 +1,17 @@
+name: 'FP1 — Acquisition NTC (lecture nominale à 25 °C)'
+version: 1
+author: 'Patxi-Sallaberry'
+
+# Vérifie EF1 au point NOMINAL : le capteur est réglé à 25 °C (attribut
+# "temperature" du diagramme) et le firmware doit lire 25.0 °C.
+#
+# NOTE IMPORTANTE (limite de l'outil, documentée) :
+# le capteur NTC de Wokwi n'expose PAS de contrôle dynamique (set-control) :
+# son attribut "temperature" est une valeur INITIALE seulement. Confirmé par
+# l'absence de test NTC dans le dépôt officiel wokwi/wokwi-part-tests et par la
+# doc ("initial temperature value"). La vérification sur la PLAGE (0 / 25 / 50 °C)
+# se fait donc en relançant la simulation avec différentes valeurs initiales ;
+# les logs correspondants sont reportés dans docs/validation.md.
+
+steps:
+  - wait-serial: 'T=25.0 C'

@@ -90,11 +90,17 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
   écran LCD (I²C) + Serial Monitor ; LED d'alarme sur seuil. Tout en **simulation
   Wokwi**, cible **Arduino Uno**.
   Ancrage réel : ventilateur de radiateur (Formula Student) / refroidissement d'enceinte.
-- **Étape en cours** : besoin ✅, cahier des charges ✅, analyse fonctionnelle ✅,
-  architecture ✅ (capteur = **NTC** analogique confirmé). Prochaine étape : **code,
-  module par module**, en commençant par l'acquisition NTC (FP1).
+- **Docs cycle en V** : besoin ✅, cahier des charges ✅, analyse fonctionnelle ✅,
+  architecture ✅ (capteur = **NTC** analogique confirmé). `docs/validation.md` ouvert
+  et tenu à jour au fil des modules.
+- **Code** : **Module 1 — FP1 acquisition NTC ✅** (`src/capteur_temp.h/.cpp`, `src/src.ino`).
+  Compile (arduino-cli, exit 0), conversion validée 0/25/50 °C, test `tests/test_capteur.yaml`
+  au vert. Prochain : **FP2 consigne (potentiomètre)**.
 - **Câblage retenu** : A0=NTC, A1=potentiomètre, A4/A5=I²C LCD, D9=PWM ventilateur,
   D8=LED alarme.
+- **⚠️ Limite outil connue** : le capteur NTC Wokwi n'est pas pilotable dynamiquement
+  (`set-control` sans effet) → stratégie de test en boucle fermée à trancher au module
+  régulation (cf. `validation.md §1` et `architecture.md §7`).
 - **Dépôt distant** : https://github.com/Patxi-Sallaberry/arduino-projects (public,
   `main` suit `origin/main`).
 

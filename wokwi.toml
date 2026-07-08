@@ -1,0 +1,6 @@
+[wokwi]
+version = 1
+# Firmware compilé par arduino-cli dans build/ (voir workflow, CLAUDE.md §6).
+# arduino-cli nomme les artefacts d'après le nom du croquis : src.ino -> src.ino.*
+firmware = 'build/src.ino.hex'
+elf = 'build/src.ino.elf'
