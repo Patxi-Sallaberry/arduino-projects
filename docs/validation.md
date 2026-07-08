@@ -14,7 +14,7 @@
 |----|----------|:------:|--------|
 | **EF1** | Mesurer la température (plage 0–60 °C) | ✅ | §1 ci-dessous |
 | **EF2** | Régler la consigne (potentiomètre → 20–45 °C) | ✅ | §2 ci-dessous |
-| **EF3** | Loi proportionnelle (BP = 5 °C) | ⬜ | — |
+| **EF3** | Loi proportionnelle (BP = 5 °C) | ✅ | §3 ci-dessous |
 | **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ⬜ | — |
 | **EF5** | Afficher sur LCD | ⬜ | — |
 | **EF6** | Tracer sur Serial (500 ms) | 🟡 | Trace série fonctionnelle dès le module FP1 (format à figer) |
@@ -26,7 +26,7 @@
 | **EC2** | Code modulaire multi-fichiers | 🟡 | Module `capteur_temp.h/.cpp` séparé du `.ino` (à compléter) |
 | **EC3** | Aucun `delay()` bloquant | 🟡 | Respecté dans le module FP1 (à re-vérifier au global) |
 | **EC4** | Testabilité (scénario wokwi-cli) | 🟡 | `tests/test_capteur.yaml` opérationnel |
-| **EC5** | Machine à états explicite | ⬜ | — |
+| **EC5** | Machine à états explicite | ✅ | §3 : états REPOS/REGULATION/ALARME nommés, transitions testées |
 
 ---
 
@@ -99,3 +99,48 @@ Scenario completed successfully  (exit 0)
 → Conversion linéaire correcte sur toute la plage : **EF2 validée**.
 Non-régression FP1 vérifiée après changement du format d'affichage (test EF1 toujours
 au vert).
+
+---
+
+## §3 — EF3 / EC5 : Régulation proportionnelle et machine à états (module `regulation`)
+
+Double niveau de test (voir aussi le point méthodo ci-dessous) :
+
+**(a) Test UNITAIRE natif** — `tests/test_regulation_unit.cpp`, compilé et exécuté sur PC
+(g++). `calculerRegulation()` étant de la logique pure, on lui passe des couples
+`(T, consigne)` **exacts** → vérification **déterministe** (impossible via la chaîne
+analogique quantifiée). 9/9 cas au vert :
+
+| Écart e (°C) | PWM attendu | État attendu | Résultat |
+|:---:|:---:|:---:|:---:|
+| −5 | 0 | REPOS | ✅ |
+| 0 | 0 | REPOS | ✅ |
+| 1 | 51 | REGULATION | ✅ |
+| 2,5 | 128 | REGULATION | ✅ |
+| 5 | 255 (saturé) | REGULATION | ✅ |
+| 6 | 255 | REGULATION | ✅ |
+| 7,9 | 255 | REGULATION | ✅ |
+| 8 | 255 | **ALARME** | ✅ |
+| 15 | 255 | **ALARME** | ✅ |
+
+**(b) Tests d'INTÉGRATION Wokwi** — `tests/run_regulation_tests.sh` (chaîne réelle
+capteur→consigne→loi→état) :
+
+- à **T = 25 °C** (`test_regulation.yaml`) : consigne 45 °C → `PWM=0 | ETAT=REPOS` ✅ ;
+  consigne 20 °C → `e=5.0 | PWM=253 | ETAT=REGULATION` ✅
+  *(PWM 253 ≠ 255 : quantification analogique — d'où l'intérêt du test unitaire pour la
+  valeur exacte).*
+- à **T = 35 °C** (`test_regulation_alarme.yaml`, via `--diagram-file`) : consigne 20 °C →
+  `e=15.0 | PWM=255 | ETAT=ALARME` ✅ ; consigne 45 °C → `PWM=0 | ETAT=REPOS` ✅
+  *(démontre que la régulation vise la consigne, pas une température absolue).*
+
+→ **EF3 et EC5 validées.**
+
+**Note méthodo — deux niveaux de test complémentaires :**
+le test **unitaire** prouve la *logique exacte* (déterministe, rapide, hors matériel) ;
+le test d'**intégration** prouve que la *chaîne physique complète* se comporte bien.
+Les deux sont nécessaires et ne se remplacent pas.
+
+**Outil — capture visuelle** : `wokwi-cli --screenshot-part <id> --screenshot-time <ms>
+--screenshot-file <png>` produit un PNG de la carte (vérifié fonctionnel). Sera utilisé
+pour illustrer l'état de la LED (FP6) et du LCD (FP5) une fois câblés.

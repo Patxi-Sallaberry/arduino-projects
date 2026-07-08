@@ -99,7 +99,17 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
   - **Module 2 — FP2 consigne potentiomètre ✅** (`src/consigne.h/.cpp`). Interpolation
     flottante 20–45 °C (pas de `map()`), `tests/test_consigne.yaml` au vert (potentiomètre
     pilotable par `set-control position`).
-  - Prochain : **FP3 régulation (écart + loi proportionnelle + machine à états)**.
+  - **Module 3 — FP3 régulation ✅** (`src/regulation.h/.cpp`). Loi P (BP=5, saturation),
+    machine à états REPOS/REGULATION/ALARME. Testé à **2 niveaux** : test unitaire natif
+    g++ (`tests/test_regulation_unit.cpp`, 9/9 déterministe) + intégration Wokwi
+    (`tests/run_regulation_tests.sh`, incl. ALARME via `--diagram-file`).
+  - Prochain : **FP4 actionneur (ventilateur PWM sur D9)**.
+- **Astuce testabilité** : le module `regulation.cpp` n'inclut que `<math.h>` (aucune API
+  Arduino) → compilable sur PC pour tests unitaires natifs. Le potentiomètre est pilotable
+  dynamiquement (`set-control position` 0–1), le NTC non (température init-only → on relance
+  avec `--diagram-file`).
+- **Rendu visuel** : (1) extension VS Code Wokwi = simulateur graphique live interactif ;
+  (2) `wokwi-cli --screenshot-part/-time/-file` = PNG headless ; (3) `--vcd-file` = chronogrammes.
 - **Câblage retenu** : A0=NTC, A1=potentiomètre, A4/A5=I²C LCD, D9=PWM ventilateur,
   D8=LED alarme.
 - **⚠️ Limite outil connue** : le capteur NTC Wokwi n'est pas pilotable dynamiquement

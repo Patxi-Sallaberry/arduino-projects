@@ -1,0 +1,24 @@
+name: 'FP3 — Intégration régulation à T=35 °C (ALARME)'
+version: 1
+author: 'Patxi-Sallaberry'
+
+# Utilisé avec --diagram-file tests/diagram_alarme.json (T procédé = 35 °C).
+# À cette température, même consigne au minimum, l'écart dépasse le seuil d'alarme.
+
+steps:
+  # Consigne au minimum (pot 0.0 -> 20 °C) : e = +15 >= 8 -> ALARME.
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0
+  - delay: 700ms
+  - wait-serial: 'ETAT=ALARME'
+
+  # Consigne au maximum (pot 1.0 -> 45 °C) : e = -10 -> REPOS, même système chaud.
+  # (Démontre que la régulation vise la consigne, pas une température absolue.)
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 1
+  - delay: 700ms
+  - wait-serial: 'PWM=0 | ETAT=REPOS'

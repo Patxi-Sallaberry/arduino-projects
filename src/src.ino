@@ -1,42 +1,47 @@
 // ============================================================================
 //  Régulateur proportionnel de vitesse de ventilateur
-//  ÉTAPE 2 — Test des acquisitions : température (FP1) + consigne (FP2)
+//  ÉTAPE 3 — Test de la régulation : mesure (FP1) + consigne (FP2) + loi P (FP3)
 //
-//  Ce croquis n'exerce QUE la chaîne d'acquisition (modules capteur_temp et
-//  consigne) : il lit périodiquement la température et la consigne et les
-//  affiche sur la liaison série. La régulation, le ventilateur, le LCD et
-//  l'alarme viendront module par module.
+//  Ce croquis lit la température et la consigne, calcule la commande de
+//  régulation et l'état, et les affiche sur la liaison série. Le ventilateur
+//  (FP4), le LCD (FP5) et la LED (FP6) viendront ensuite.
+//  NB : la cadence de régulation à 100 ms (EP1) sera figée lors de l'intégration
+//  finale de l'actionneur ; ici on calcule au rythme d'affichage (500 ms).
 // ============================================================================
 
 #include "capteur_temp.h"
 #include "consigne.h"
+#include "regulation.h"
 
-// Cadence d'affichage (ms). Principe NON BLOQUANT (EC3) : pas de delay(),
-// on compare millis() (EP1). Affichage à 500 ms (EF6).
 const unsigned long PERIODE_AFFICHAGE_MS = 500;
 unsigned long dernierAffichage = 0;
 
 void setup() {
   Serial.begin(9600);
-  // Les entrées analogiques ne nécessitent pas de pinMode().
-  Serial.println("== Test acquisitions : FP1 temperature + FP2 consigne ==");
+  Serial.println("== Test regulation : FP1 + FP2 + FP3 ==");
 }
 
 void loop() {
   unsigned long maintenant = millis();
 
-  // Ordonnancement non bloquant (la soustraction non signée gère le débordement
-  // de millis()). C'est le patron de base du temps réel sur Arduino.
+  // Ordonnancement non bloquant (soustraction non signée = robuste au débordement).
   if (maintenant - dernierAffichage >= PERIODE_AFFICHAGE_MS) {
     dernierAffichage = maintenant;
 
     float tempC     = lireTemperature();
     float consigneC = lireConsigne();
+    SortieRegulation reg = calculerRegulation(tempC, consigneC);
 
+    // Trace parsable : T | Consigne | erreur | PWM | ETAT
     Serial.print("T=");
     Serial.print(tempC, 1);
     Serial.print(" C | Cons=");
     Serial.print(consigneC, 1);
-    Serial.println(" C");
+    Serial.print(" C | e=");
+    Serial.print(reg.erreur, 1);
+    Serial.print(" | PWM=");
+    Serial.print(reg.commande);
+    Serial.print(" | ETAT=");
+    Serial.println(nomEtat(reg.etat));
   }
 }

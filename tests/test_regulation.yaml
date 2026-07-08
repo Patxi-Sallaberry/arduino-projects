@@ -1,0 +1,23 @@
+name: 'FP3 — Intégration régulation à T=25 °C (REPOS + REGULATION)'
+version: 1
+author: 'Patxi-Sallaberry'
+
+# Vérifie la chaîne complète capteur -> consigne -> loi -> état à T procédé = 25 °C.
+# On assert surtout l'ÉTAT (robuste), le PWM exact étant couvert par le test unitaire.
+
+steps:
+  # Consigne au maximum (pot 1.0 -> 45 °C) : e très négatif -> REPOS, ventilo à l'arrêt.
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 1
+  - delay: 700ms
+  - wait-serial: 'PWM=0 | ETAT=REPOS'
+
+  # Consigne au minimum (pot 0.0 -> 20 °C) : e = +5 -> on régule (ventilo actif).
+  - set-control:
+      part-id: pot1
+      control: position
+      value: 0
+  - delay: 700ms
+  - wait-serial: 'ETAT=REGULATION'
