@@ -90,9 +90,9 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
   écran LCD (I²C) + Serial Monitor ; LED d'alarme sur seuil. Tout en **simulation
   Wokwi**, cible **Arduino Uno**.
   Ancrage réel : ventilateur de radiateur (Formula Student) / refroidissement d'enceinte.
-- **Étape en cours** : besoin ✅ et cahier des charges ✅ validés. Prochaine étape du
-  cycle en V : `docs/analyse-fonctionnelle.md` (fonctions FP1, FP2…), puis
-  `docs/architecture.md`. Toujours **aucun code** écrit à ce stade.
+- **Étape en cours** : besoin ✅, cahier des charges ✅, analyse fonctionnelle ✅.
+  Prochaine étape du cycle en V : `docs/architecture.md` (composants Wokwi + table des
+  pins). Toujours **aucun code** écrit à ce stade.
 - **Dépôt distant** : https://github.com/Patxi-Sallaberry/arduino-projects (public,
   `main` suit `origin/main`).
 
