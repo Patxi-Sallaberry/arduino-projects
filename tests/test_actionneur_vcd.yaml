@@ -1,12 +1,13 @@
-name: 'FP4 — Capture du PWM sur D9 (potentiomètre 0.1 -> e=2.5 -> PWM~126)'
+name: 'FP4 — Capture du PWM sur D9 (potentiomètre 0.375 -> e=2.5 -> PWM~126)'
 version: 1
 author: 'Patxi-Sallaberry'
 
 # Règle le potentiomètre pour viser ~50 % de PWM, laisse la régulation converger,
 # le tout capturé par l'analyseur logique du diagramme principal (analyseur logique intégré) (-> VCD).
+# pot 0.375 -> consigne 22.5 °C ; procédé à 25 °C -> e = 2.5 °C = BP/2 -> PWM = 128/255.
 steps:
   - set-control:
       part-id: pot1
       control: position
-      value: 0.1
+      value: 0.375
   - delay: 1600ms

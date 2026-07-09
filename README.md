@@ -27,17 +27,22 @@ consigne ─► [ écart e = T_mesurée − T_consigne ] ─► [ loi proportion
                      └──────────────── capteur de température ◄─────── procédé ◄──────┘
 ```
 
-**Loi de commande** (bande proportionnelle de 5 °C) :
-- `e ≤ 0` → ventilateur à l'arrêt (état **REPOS**)
-- `0 < e < 8 °C` → vitesse ∝ écart, `PWM = round(255·e/5)` (état **REGULATION**)
-- `e ≥ 8 °C` → vitesse maxi + **LED d'alarme** (état **ALARME**)
+**Loi de commande** (bande proportionnelle BP = 5 °C) :
+- `e ≤ 0` → ventilateur à l'arrêt, `PWM = 0` (état **REPOS**)
+- `0 < e < 5 °C` → vitesse ∝ écart, `PWM = round(255·e/5)` (état **REGULATION**)
+- `5 ≤ e < 8 °C` → commande **saturée**, `PWM = 255` (état **REGULATION**)
+- `e ≥ 8 °C` → `PWM = 255` + **LED d'alarme** (état **ALARME**)
+
+La saturation et le seuil d'alarme sont deux notions distinctes : le ventilateur donne son
+maximum dès `e = BP = 5 °C`, mais le système n'alerte qu'à partir de `e = 8 °C` — c'est-à-dire
+quand le refroidissement maximal ne suffit manifestement plus.
 
 ## Matériel (câblage Arduino Uno)
 
 | Broche | Élément | Fonction |
 |---|---|---|
 | A0 | Thermistance NTC (diviseur) | Mesure de température |
-| A1 | Potentiomètre | Consigne (20–45 °C) |
+| A1 | Potentiomètre | Consigne (15–35 °C) |
 | A4 / A5 | LCD 16×2 I²C (SDA / SCL) | Affichage |
 | D9 (PWM) | Ventilateur (MOSFET + moteur + diode) | Commande de vitesse |
 | D8 | LED rouge | Alarme de seuil |
@@ -78,7 +83,8 @@ bash tests/run_alarme_test.sh                                       # FP6 LED (v
 
 **Rendu visuel interactif** : ouvrir le projet dans VS Code et lancer l'extension
 *Wokwi Simulator* (palette → « Wokwi: Start Simulator ») pour manipuler le potentiomètre
-et le curseur de température en temps réel.
+et le curseur de température en temps réel. L'extension demande une **clé de licence**
+(gratuite pour un usage personnel), distincte du `WOKWI_CLI_TOKEN` utilisé en headless.
 
 ## Intégration continue
 
@@ -104,6 +110,14 @@ Documents dans [`docs/`](docs/), rédigés **avant** le code :
   validable en simulation (capteur NTC non pilotable dynamiquement + erreur statique
   intrinsèque du régulateur P).
 - Conception EC1–EC5 : **5/5** ✅
+
+**Une exigence a été révisée en cours de validation.** La plage de consigne EF2, d'abord
+fixée à 20–45 °C, laissait **80 % de la course du potentiomètre inopérante** au point de
+fonctionnement du procédé (25 °C) : la loi ne commande que si `e = T − Cons > 0`. Le code
+et ses tests étaient pourtant conformes — le défaut était **dans l'exigence**, pas dans
+l'implémentation. Plage recentrée sur **15–35 °C**, les trois états devenant atteignables
+au potentiomètre. Constat, cause, décision et revalidation sont tracés dans
+[`validation.md §8`](docs/validation.md).
 
 ## Limites et évolutions
 

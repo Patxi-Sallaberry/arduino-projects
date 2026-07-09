@@ -1,13 +1,16 @@
-name: 'FP6 — Consigne au minimum (pot 0.0 -> 20 °C)'
+name: 'FP6 — Consigne intermédiaire (pot 0.25 -> 20 °C)'
 version: 1
 author: 'Patxi-Sallaberry'
 
-# Scénario partagé : consigne au minimum. Combiné à la température du diagramme :
-#   - diagram_alarme.json (35 °C) -> e=15 -> ALARME  -> LED D8 allumée
-#   - diagram.json        (25 °C) -> e=5  -> REGUL   -> LED D8 éteinte
+# Scénario partagé : UNE seule consigne (20 °C) doit discriminer les deux cas.
+# Combiné à la température du diagramme :
+#   - diagram_alarme.json (30 °C) -> e=10 >= 8 -> ALARME -> LED D8 allumée
+#   - diagram.json        (25 °C) -> e=5  <  8 -> REGUL  -> LED D8 éteinte
+# Le seuil d'alarme (8 °C) tombe entre les deux, avec 2 °C de marge d'un côté
+# et 3 °C de l'autre.
 steps:
   - set-control:
       part-id: pot1
       control: position
-      value: 0
+      value: 0.25
   - delay: 1600ms

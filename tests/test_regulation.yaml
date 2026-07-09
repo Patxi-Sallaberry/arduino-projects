@@ -6,7 +6,7 @@ author: 'Patxi-Sallaberry'
 # On assert surtout l'ÉTAT (robuste), le PWM exact étant couvert par le test unitaire.
 
 steps:
-  # Consigne au maximum (pot 1.0 -> 45 °C) : e très négatif -> REPOS, ventilo à l'arrêt.
+  # Consigne au maximum (pot 1.0 -> 35 °C) : e = -10 -> REPOS, ventilo à l'arrêt.
   - set-control:
       part-id: pot1
       control: position
@@ -14,10 +14,12 @@ steps:
   - delay: 700ms
   - wait-serial: 'PWM=0 | ETAT=REPOS'
 
-  # Consigne au minimum (pot 0.0 -> 20 °C) : e = +5 -> on régule (ventilo actif).
+  # Pot 0.375 -> consigne 22.5 °C : e = +2.5 -> on régule (ventilo actif).
+  # NB : PAS la butée basse (pot 0 -> 15 °C -> e = +10 >= 8 -> ALARME). On vise
+  # le milieu de la bande proportionnelle, à distance des deux frontières d'état.
   - set-control:
       part-id: pot1
       control: position
-      value: 0
+      value: 0.375
   - delay: 700ms
   - wait-serial: 'ETAT=REGULATION'

@@ -12,8 +12,11 @@
 const int PIN_CONSIGNE = A1;
 
 // Bornes de la consigne réglable (cf. EF2, cahier-des-charges.md).
-const float CONSIGNE_MIN = 20.0;   // °C — potentiomètre en butée basse
-const float CONSIGNE_MAX = 45.0;   // °C — potentiomètre en butée haute
+// Plage CENTRÉE sur la température nominale du procédé (25 °C) : une plage
+// entièrement au-dessus du point de fonctionnement rendrait l'essentiel de la
+// course du potentiomètre inopérante (e <= 0 -> REPOS). Cf. validation.md §8.
+const float CONSIGNE_MIN = 15.0;   // °C — potentiomètre en butée basse
+const float CONSIGNE_MAX = 35.0;   // °C — potentiomètre en butée haute
 
 // Lit le potentiomètre et renvoie la consigne demandée, en degrés Celsius.
 float lireConsigne();

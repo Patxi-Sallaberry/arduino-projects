@@ -123,7 +123,7 @@ Découpage issu des chaînes fonctionnelles (analyse fonctionnelle §5) :
 | Module (`.h`/`.cpp`) | Responsabilité | Fonctions |
 |---|---|---|
 | `capteur_temp` | Lire A0 → °C (les 4 étapes du §2) | FP1 |
-| `consigne` | Lire A1 → consigne 20–45 °C | FP2 |
+| `consigne` | Lire A1 → consigne 15–35 °C | FP2 |
 | `regulation` | Écart, loi P, machine à états | FP3, FP6 |
 | `actionneur` | Écrire le PWM sur D9 | FP4 |
 | `affichage` | LCD + Serial | FP5 |

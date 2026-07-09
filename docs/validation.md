@@ -13,7 +13,7 @@
 | ID | Exigence | Statut | Preuve |
 |----|----------|:------:|--------|
 | **EF1** | Mesurer la température (plage 0–60 °C) | ✅ | §1 ci-dessous |
-| **EF2** | Régler la consigne (potentiomètre → 20–45 °C) | ✅ | §2 ci-dessous |
+| **EF2** | Régler la consigne (potentiomètre → 15–35 °C) | ✅ | §2 ci-dessous |
 | **EF3** | Loi proportionnelle (BP = 5 °C) | ✅ | §3 ci-dessous |
 | **EF4** | Piloter la vitesse du ventilateur (PWM 8 bits) | ✅ | §4 ci-dessous |
 | **EF5** | Afficher sur LCD | ✅ | §6 ci-dessous |
@@ -76,8 +76,9 @@ capteur pilotable type DS18B20 ; banc de test dédié). Voir `architecture.md §
 
 ## §2 — EF2 : Acquisition de la consigne (module `consigne`)
 
-**Principe** : potentiomètre sur A1, position → consigne 20–45 °C par interpolation
-**flottante** (pas de `map()` entier, cf. code commenté).
+**Principe** : potentiomètre sur A1, position → consigne 15–35 °C par interpolation
+**flottante** (pas de `map()` entier, cf. code commenté). Plage **centrée sur les 25 °C
+nominaux du procédé** : voir §8 pour la justification de ce dimensionnement.
 
 **Test automatisé (EC4)** — `wokwi-cli . --scenario tests/test_consigne.yaml`.
 Contrairement au NTC, le potentiomètre Wokwi **est pilotable** (contrôle `position`,
@@ -85,14 +86,14 @@ Contrairement au NTC, le potentiomètre Wokwi **est pilotable** (contrôle `posi
 
 | Position potentiomètre | Consigne lue | Attendu | Résultat |
 |:---:|:---:|:---:|:---:|
-| 0.0 (butée basse) | **20.0 °C** | 20,0 °C | ✅ |
-| 0.5 (milieu)      | **32.5 °C** | 32,5 °C | ✅ |
-| 1.0 (butée haute) | **45.0 °C** | 45,0 °C | ✅ |
+| 0.0 (butée basse) | **15.0 °C** | 15,0 °C | ✅ |
+| 0.5 (milieu)      | **25.0 °C** | 25,0 °C | ✅ |
+| 1.0 (butée haute) | **35.0 °C** | 35,0 °C | ✅ |
 
 ```
-Expected text matched: "Cons=20.0 C"
-Expected text matched: "Cons=32.5 C"
-Expected text matched: "Cons=45.0 C"
+Expected text matched: "Cons=15.0 C"
+Expected text matched: "Cons=25.0 C"
+Expected text matched: "Cons=35.0 C"
 Scenario completed successfully  (exit 0)
 ```
 
@@ -126,13 +127,19 @@ analogique quantifiée). 9/9 cas au vert :
 **(b) Tests d'INTÉGRATION Wokwi** — `tests/run_regulation_tests.sh` (chaîne réelle
 capteur→consigne→loi→état) :
 
-- à **T = 25 °C** (`test_regulation.yaml`) : consigne 45 °C → `PWM=0 | ETAT=REPOS` ✅ ;
-  consigne 20 °C → `e=5.0 | PWM=253 | ETAT=REGULATION` ✅
-  *(PWM 253 ≠ 255 : quantification analogique — d'où l'intérêt du test unitaire pour la
+- à **T = 25 °C** (`test_regulation.yaml`) : consigne 35 °C → `PWM=0 | ETAT=REPOS` ✅ ;
+  consigne 22,5 °C → `e=2.4 | PWM=125 | ETAT=REGULATION` ✅
+  *(PWM 125 ≠ 128 : quantification analogique — d'où l'intérêt du test unitaire pour la
   valeur exacte).*
-- à **T = 35 °C** (`test_regulation_alarme.yaml`, via `--diagram-file`) : consigne 20 °C →
-  `e=15.0 | PWM=255 | ETAT=ALARME` ✅ ; consigne 45 °C → `PWM=0 | ETAT=REPOS` ✅
+- à **T = 30 °C** (`test_regulation_alarme.yaml`, via `--diagram-file`) : consigne 15 °C →
+  `e=15.0 | PWM=255 | ETAT=ALARME` ✅ ; consigne 35 °C → `e=-5.0 | PWM=0 | ETAT=REPOS` ✅
   *(démontre que la régulation vise la consigne, pas une température absolue).*
+
+**Choix des points de test** — chaque assertion est prise **à distance des frontières
+d'état** (`e = 0` et `e = 8`). Le cas REGULATION vise `e = 2,5` (milieu de bande) et non la
+butée basse, qui donnerait `e = 10` donc ALARME ; le cas REPOS à chaud vise `e = −5` et non
+`e = 0`, où un dixième de degré de bruit ADC ferait basculer l'état. Un test posé sur une
+égalité exacte ne teste rien.
 
 → **EF3 et EC5 validées.**
 
@@ -157,12 +164,12 @@ une LED sur D9 visualise le rapport cyclique (proxy de vitesse). Cf. `architectu
 un **analyseur logique** (`tests/diagram_vcd.json`) capture D9, exporté en **VCD**, dont
 on mesure le rapport cyclique en régime établi (`tests/mesure_duty.py`).
 
-| Consigne (pot 0.1) | Écart e | PWM attendu | Rapport cyclique mesuré sur D9 |
+| Consigne (pot 0.375) | Écart e | PWM attendu | Rapport cyclique mesuré sur D9 |
 |:---:|:---:|:---:|:---:|
-| 22,5 °C | 2,5 °C | 126/255 | **49,4 %** (attendu 49,4 % ±3) → ✅ |
+| 22,5 °C | 2,5 °C | 126/255 | **49,1 %** (attendu 49,4 % ±3) → ✅ |
 
 ```
-Rapport cyclique D9 (regime etabli 250 ms) : 49.4 % (attendu 49.4 +/- 3.0)  [OK]
+Rapport cyclique D9 (regime etabli 250 ms) : 49.1 % (attendu 49.4 +/- 3.0)  [OK]
 ```
 
 *Finesse mesurée* : sur la fenêtre complète on lisait 39 % — car elle incluait le
@@ -185,8 +192,12 @@ final de D8 est lu dans le VCD (`tests/verifie_pin.py`) selon la température du
 
 | Cas | T procédé | Consigne | État | Broche D8 (LED) | Résultat |
 |---|:---:|:---:|:---:|:---:|:---:|
-| Alarme | 35 °C | 20 °C | ALARME (e=15) | **1 (allumée)** | ✅ |
+| Alarme | 30 °C | 20 °C | ALARME (e=10) | **1 (allumée)** | ✅ |
 | Hors alarme | 25 °C | 20 °C | REGULATION (e=5) | **0 (éteinte)** | ✅ |
+
+*Le scénario est **partagé** entre les deux diagrammes : une seule consigne (20 °C, pot à
+0.25) doit discriminer les deux cas. Le seuil d'alarme (8 °C) tombe entre `e=5` et `e=10`,
+avec 3 °C de marge d'un côté et 2 °C de l'autre.*
 
 ```
 Etat final D1 (= broche D8, LED alarme) : 1 (attendu 1)  [OK]
@@ -215,12 +226,12 @@ T:25.0 C:22.5
 Vt:49% REGUL
 ```
 
-État alarme (procédé 35 °C, consigne 20 °C) :
+État alarme (procédé 30 °C, consigne 20 °C) :
 
 ![LCD en alarme](img/lcd_alarme.png)
 
 ```
-T:35.0 C:20.0
+T:30.0 C:20.0
 Vt:100% ALARM
 ```
 
@@ -249,6 +260,87 @@ raisons cumulées, honnêtement documentées :
 ajoutant un **modèle thermique** au banc de test, puis en mesurant l'écart en régime
 établi. C'est aussi le point d'entrée naturel vers un **terme intégral (PI/PID)** pour
 annuler cette erreur — évolution déjà identifiée hors périmètre.
+
+---
+
+## §8 — Révision d'exigence : dimensionnement de la plage de consigne (EF2)
+
+Seule exigence **modifiée après validation initiale**. Le cycle en V impose d'en tracer le
+constat, la cause, la décision et la revalidation.
+
+### 8.1 — Constat
+
+Relevé en **simulation interactive** (panneau graphique Wokwi, procédé à 25 °C), et non par
+un test automatisé : en balayant le potentiomètre sur toute sa course, la commande
+ventilateur ne réagissait que sur le **premier cinquième** de celle-ci. Au-delà, système
+figé en `REPOS`, `PWM=0`, LED éteinte. L'opérateur a l'impression que le réglage est mort.
+
+### 8.2 — Cause
+
+La loi ne produit une commande que si `e = T − Cons > 0` (`regulation.cpp`, 1ʳᵉ branche).
+À procédé fixé à 25 °C, cela impose `Cons < 25 °C`. Or la plage EF2 initiale était
+**20–45 °C**, c'est-à-dire **entièrement au-dessus** du point de fonctionnement :
+
+| Portion de la course | Consigne | Écart `e` | Comportement |
+|---|:---:|:---:|---|
+| 0 % → 20 % | 20 → 25 °C | +5 → 0 °C | zone active : PWM 255 → 0 |
+| 20 % → 100 % | 25 → 45 °C | 0 → −20 °C | **zone morte** : PWM 0, `REPOS` |
+
+**80 % de la course inopérante.** Corollaire : l'état `ALARME` (`e ≥ 8 °C`, soit
+`Cons ≤ 17 °C`) était **inatteignable au potentiomètre**.
+
+Ce n'était **pas un défaut d'implémentation** : EF2 et EF3 étaient l'une et l'autre
+respectées, et leurs tests au vert. Le défaut était **dans l'exigence elle-même** — la
+plage avait été fixée sans la confronter au point de fonctionnement du procédé. C'est le
+type d'écart qu'un cycle en V ne révèle qu'à la validation, alors que le choix a été fait
+à la spécification.
+
+### 8.3 — Décision
+
+Plage de consigne **centrée sur la température nominale du procédé** : **15–35 °C**
+(`consigne.h`), au lieu de 20–45 °C. Le point de fonctionnement (25 °C) tombe désormais au
+**milieu** de la course. Répartition obtenue :
+
+| Portion de la course | Consigne | Écart `e` | État |
+|---|:---:|:---:|---|
+| 0 % → 10 % | 15 → 17 °C | +10 → +8 °C | **ALARME** (désormais atteignable) |
+| 10 % → 50 % | 17 → 25 °C | +8 → 0 °C | **REGULATION** (bande proportionnelle) |
+| 50 % → 100 % | 25 → 35 °C | 0 → −10 °C | REPOS (marge de refroidissement) |
+
+Les **trois états** sont atteignables au potentiomètre seul. Le REPOS résiduel n'est pas
+une zone morte : c'est la réserve de consigne au-dessus du point de fonctionnement, qui a
+un sens physique (tolérer un procédé plus chaud sans ventiler).
+
+Ancrage réel : sur un radiateur de Formula Student, la consigne se règle **autour** de la
+température d'eau cible (~85 °C), pas de 0 à 120 °C.
+
+### 8.4 — Impact et revalidation
+
+Le code ne change que par **deux constantes** (`CONSIGNE_MIN`, `CONSIGNE_MAX`) :
+`consigne.cpp` interpole entre elles, `regulation.cpp` ignore la plage. La cascade porte
+sur les **points de test**, qui étaient exprimés en positions de potentiomètre :
+
+| Fichier | Avant | Après | Raison |
+|---|---|---|---|
+| `test_consigne.yaml` | 20 / 32,5 / 45 °C | 15 / 25 / 35 °C | nouvelles butées (EF2) |
+| `test_regulation.yaml` | pot 0 → REGULATION | pot 0,375 → REGULATION | pot 0 donne `e=10` → **ALARME** |
+| `test_actionneur_vcd.yaml` | pot 0,1 | pot 0,375 | même point physique (`e=2,5`) |
+| `test_alarme.yaml` | pot 0 | pot 0,25 | consigne 20 °C, discrimine les 2 diagrammes |
+| `diagram_alarme.json` | 35 °C | 30 °C | voir ci-dessous |
+
+**Pourquoi abaisser le diagramme d'alarme à 30 °C** : à 35 °C, la nouvelle consigne
+maximale vaut exactement 35 °C, donc `e = 0,0` — l'assertion `REPOS` du test se poserait
+**pile sur la frontière d'état**, et 0,1 °C de bruit ADC la ferait basculer en
+`REGULATION`. À 30 °C, les deux cas retrouvent des marges franches (`e = +15` et `e = −5`).
+
+**Revalidation complète, tous tests au vert** (`test_regulation_unit` 9/9,
+`run_regulation_tests.sh`, `run_actionneur_test.sh`, `run_alarme_test.sh`) ; captures LCD
+régénérées (§6). Le test unitaire natif n'a **pas été touché** : il éprouve la logique pure
+`calculerRegulation(T, Cons)`, indépendante de la plage de consigne — bénéfice direct de
+la séparation acquisition / traitement.
+
+**Traçabilité** : aucun statut du tableau de suivi ne change. EF2 reste ✅, sur un critère
+révisé.
 
 ---
 

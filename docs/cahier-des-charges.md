@@ -54,7 +54,7 @@ sinon             :  cmd = round(255 * e / BP)   (variation linéaire)
 | ID | Exigence | Critère mesurable | Moyen de vérification |
 |----|----------|-------------------|-----------------------|
 | **EF1** | Le système mesure la température ambiante. | Plage exploitable **0 à 60 °C**. | Scénario Wokwi : imposer plusieurs températures, vérifier la valeur lue (tolérance de conversion documentée). |
-| **EF2** | L'opérateur règle la consigne via le potentiomètre. | Position du potentiomètre → consigne **linéaire de 20 à 45 °C** (butée basse = 20, butée haute = 45). | Scénario Wokwi : imposer 3 positions (0 %, 50 %, 100 %), vérifier consigne ≈ 20 / 32,5 / 45 °C. |
+| **EF2** | L'opérateur règle la consigne via le potentiomètre. | Position du potentiomètre → consigne **linéaire de 15 à 35 °C** (butée basse = 15, butée haute = 35). Plage **centrée sur la température nominale du procédé** (25 °C, au milieu de la course). | Scénario Wokwi : imposer 3 positions (0 %, 50 %, 100 %), vérifier consigne ≈ 15 / 25 / 35 °C. |
 | **EF3** | Le système applique une loi **proportionnelle** (cf. §3). | Bande proportionnelle **5 °C** ; `e≤0 → cmd=0` ; `e≥5 → cmd=255` ; linéaire entre les deux. | Scénario Wokwi : imposer `e = −2, 0, +2,5, +5, +8 °C`, vérifier `cmd = 0, 0, 128, 255, 255`. |
 | **EF4** | Le système pilote la vitesse du ventilateur. | Sortie **PWM 8 bits (0–255)** via `analogWrite`, recalculée à chaque cycle. | Scénario Wokwi : lire le rapport cyclique du moteur, cohérent avec `cmd`. |
 | **EF5** | Le système affiche l'état sur écran LCD. | Affiche `T_mesuree`, `T_consigne`, `% ventilo`, `état`, rafraîchi toutes les **500 ms**. | Inspection visuelle + trace ; vérifier période de rafraîchissement. |

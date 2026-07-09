@@ -3,7 +3,7 @@
 #  Suite de tests du module de régulation (FP3).
 #   1) Test UNITAIRE natif (g++)   : logique pure, assertions déterministes.
 #   2) Intégration Wokwi à 25 °C   : REPOS + REGULATION (chaîne analogique réelle).
-#   3) Intégration Wokwi à 35 °C   : ALARME (diagramme dédié, NTC init-only).
+#   3) Intégration Wokwi à 30 °C   : ALARME (diagramme dédié, NTC init-only).
 #  Usage : bash tests/run_regulation_tests.sh
 # ============================================================================
 set -uo pipefail
@@ -20,7 +20,7 @@ arduino-cli compile --fqbn arduino:avr:uno --output-dir build src/ >/dev/null 2>
   || { echo "compilation firmware KO"; exit 1; }
 wokwi-cli . --scenario tests/test_regulation.yaml --timeout 12000 || fail=1
 
-echo ""; echo "===== 3) Integration Wokwi — T procede = 35 C (ALARME) ====="
+echo ""; echo "===== 3) Integration Wokwi — T procede = 30 C (ALARME) ====="
 wokwi-cli . --diagram-file tests/diagram_alarme.json \
              --scenario tests/test_regulation_alarme.yaml --timeout 12000 || fail=1
 

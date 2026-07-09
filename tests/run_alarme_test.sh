@@ -12,13 +12,13 @@ fail=0
 arduino-cli compile --fqbn arduino:avr:uno --output-dir build src/ >/dev/null 2>&1 \
   || { echo "compilation firmware KO"; exit 1; }
 
-echo "--- Cas ALARME (T=35 C, consigne mini) : LED attendue ALLUMEE ---"
+echo "--- Cas ALARME (T=30 C, consigne 20 C -> e=10) : LED attendue ALLUMEE ---"
 wokwi-cli . --diagram-file tests/diagram_alarme.json --scenario tests/test_alarme.yaml \
              --vcd-file build/alarme.vcd --timeout 2600 >/dev/null 2>&1 \
   || { echo "capture VCD (alarme) KO"; exit 1; }
 python3 tests/verifie_pin.py build/alarme.vcd D1 1 || fail=1
 
-echo "--- Cas hors alarme (T=25 C, consigne mini -> REGULATION) : LED attendue ETEINTE ---"
+echo "--- Cas hors alarme (T=25 C, consigne 20 C -> e=5 -> REGULATION) : LED attendue ETEINTE ---"
 wokwi-cli . --scenario tests/test_alarme.yaml \
              --vcd-file build/regul.vcd --timeout 2600 >/dev/null 2>&1 \
   || { echo "capture VCD (regul) KO"; exit 1; }
