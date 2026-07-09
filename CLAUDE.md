@@ -97,8 +97,8 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
   - **Module 1 — FP1 acquisition NTC ✅** (`src/capteur_temp.h/.cpp`). Conversion validée
     0/25/50 °C, `tests/test_capteur.yaml` au vert.
   - **Module 2 — FP2 consigne potentiomètre ✅** (`src/consigne.h/.cpp`). Interpolation
-    flottante 20–45 °C (pas de `map()`), `tests/test_consigne.yaml` au vert (potentiomètre
-    pilotable par `set-control position`).
+    flottante 15–35 °C (pas de `map()`, plage révisée — voir plus bas), `tests/test_consigne.yaml`
+    au vert (potentiomètre pilotable par `set-control position`).
   - **Module 3 — FP3 régulation ✅** (`src/regulation.h/.cpp`). Loi P (BP=5, saturation),
     machine à états REPOS/REGULATION/ALARME. Testé à **2 niveaux** : test unitaire natif
     g++ (`tests/test_regulation_unit.cpp`, 9/9 déterministe) + intégration Wokwi
@@ -115,17 +115,38 @@ Produire les documents dans CET ordre, AVANT le code fonctionnel :
     (`docs/img/lcd_*.png`).
 - **✅ PROJET COMPLET** : les 7 fonctions livrées et testées. **14/15 exigences validées**
   (seule réserve : EP2 erreur statique, non validable en sim — voir `validation.md §7`).
-  README.md rédigé. Dépôt à jour sur GitHub.
+  README.md rédigé. CI GitHub Actions en place.
+- **Révision d'exigence EF2** (`validation.md §8`) : plage de consigne recentrée
+  **20–45 °C → 15–35 °C**, car 80 % de la course du potentiomètre était inopérante au point
+  de fonctionnement (25 °C). Défaut *dans l'exigence*, pas dans le code. Conséquences :
+  points de test repositionnés (`test_regulation.yaml` pot 0,375 ; `test_alarme.yaml`
+  pot 0,25 ; `test_actionneur_vcd.yaml` pot 0,375) et `tests/diagram_alarme.json` abaissé
+  à **30 °C** (à 35 °C, la consigne maxi donnait `e = 0` pile sur une frontière d'état).
+  Le test unitaire natif n'a pas bougé : logique pure, indépendante de la plage.
 - **Évolutions identifiées** (hors périmètre) : régulateur PID (annule l'erreur statique),
   banc de test thermique pour la boucle fermée dynamique, matériel réel.
-- **Diagrammes** : `diagram.json` (procédé 25 °C) et `tests/diagram_alarme.json` (35 °C),
+- **Diagrammes** : `diagram.json` (procédé 25 °C) et `tests/diagram_alarme.json` (30 °C),
   tous deux avec LED ventilateur (D9), LED alarme (D8) et analyseur logique (D0=D9, D1=D8).
+  Schéma **réagencé pour la lisibilité** : les broches de masse de l'Uno ne sont pas du même
+  côté (`GND.1` bord haut, `GND.2`/`GND.3` bord bas) — brancher un composant du bas sur
+  `GND.1` fait traverser toute la carte au fil. Les LEDs partagent un rail de masse
+  (`led_alarme:C` → `led_fan:C` → `GND.1`). Coordonnées exactes des broches :
+  `raw.githubusercontent.com/wokwi/wokwi-elements/main/src/<part>-element.ts` (tableau
+  `pinInfo`) — ne jamais les deviner.
 - **Astuce testabilité** : le module `regulation.cpp` n'inclut que `<math.h>` (aucune API
   Arduino) → compilable sur PC pour tests unitaires natifs. Le potentiomètre est pilotable
   dynamiquement (`set-control position` 0–1), le NTC non (température init-only → on relance
   avec `--diagram-file`).
 - **Rendu visuel** : (1) extension VS Code Wokwi = simulateur graphique live interactif ;
-  (2) `wokwi-cli --screenshot-part/-time/-file` = PNG headless ; (3) `--vcd-file` = chronogrammes.
+  (2) `wokwi-cli --screenshot-part/-time/-file` = PNG headless (la capture doit tomber
+  **avant** la fin du scénario, sinon `wokwi-cli` attend indéfiniment) ; (3) `--vcd-file`
+  = chronogrammes. Pas de capture de la scène entière en headless.
+- **Extension VS Code** : `wokwi.wokwi-vscode` doit être installée **dans le remote WSL**
+  (`code --install-extension`), puis fenêtre rechargée. Elle exige une **clé de licence**
+  (plan Community, gratuit) distincte du `WOKWI_CLI_TOKEN`. L'**éditeur graphique**
+  (bouton crayon) est **payant** (Hobby+/Pro) → édition du schéma par le texte uniquement.
+  Le bouton `↺` redémarre le MCU **sans relire `diagram.json`** : fermer l'onglet et
+  relancer `Wokwi: Start Simulator`.
 - **Câblage retenu** : A0=NTC, A1=potentiomètre, A4/A5=I²C LCD, D9=PWM ventilateur,
   D8=LED alarme.
 - **⚠️ Limite outil connue** : le capteur NTC Wokwi n'est pas pilotable dynamiquement

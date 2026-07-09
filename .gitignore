@@ -9,6 +9,11 @@ build/
 *.map          # carte mémoire de l'éditeur de liens
 *.d            # fichiers de dépendances générés
 
+# --- Traces de simulation ---
+# Chronogrammes exportés par l'analyseur logique (wokwi-cli --vcd-file, ou export
+# du simulateur graphique) : ce sont des mesures, régénérables par les tests.
+*.vcd
+
 # --- Environnement / outils ---
 .DS_Store      # métadonnées macOS (au cas où tu échanges des fichiers)
 *.log
