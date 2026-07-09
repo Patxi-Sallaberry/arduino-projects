@@ -1,0 +1,53 @@
+name: CI
+
+# Intégration continue : à chaque push / pull request, on vérifie que le firmware
+# compile et que la logique de régulation passe ses tests unitaires. Les tests
+# d'intégration Wokwi ne s'exécutent que si le secret WOKWI_CLI_TOKEN est défini
+# dans le dépôt (Settings > Secrets and variables > Actions) ; sinon ils sont
+# sautés et le job reste vert.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-et-tests:
+    runs-on: ubuntu-latest
+    env:
+      WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer arduino-cli
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Installer le core AVR et la librairie LCD
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+          arduino-cli lib install "LiquidCrystal I2C"
+
+      - name: Compiler le firmware (EC1)
+        run: arduino-cli compile --fqbn arduino:avr:uno --output-dir build src/
+
+      - name: Test unitaire natif de la régulation (FP3 / EF3)
+        run: |
+          mkdir -p build
+          g++ -Isrc tests/test_regulation_unit.cpp src/regulation.cpp -o build/test_regulation_unit
+          ./build/test_regulation_unit
+
+      - name: Installer wokwi-cli
+        if: env.WOKWI_CLI_TOKEN != ''
+        run: curl -L https://wokwi.com/ci/install.sh | sh
+
+      - name: Tests d'intégration Wokwi (FP1, FP2, FP3, FP4, FP6)
+        if: env.WOKWI_CLI_TOKEN != ''
+        run: |
+          wokwi-cli . --scenario tests/test_capteur.yaml  --timeout 8000
+          wokwi-cli . --scenario tests/test_consigne.yaml --timeout 14000
+          bash tests/run_regulation_tests.sh
+          bash tests/run_actionneur_test.sh
+          bash tests/run_alarme_test.sh

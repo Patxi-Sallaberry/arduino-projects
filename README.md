@@ -1,5 +1,7 @@
 # Régulateur proportionnel de vitesse de ventilateur
 
+[![CI](https://github.com/Patxi-Sallaberry/arduino-projects/actions/workflows/ci.yml/badge.svg)](https://github.com/Patxi-Sallaberry/arduino-projects/actions/workflows/ci.yml)
+
 Système embarqué **Arduino Uno** de régulation en **boucle fermée** : un capteur de
 température mesure un procédé, un potentiomètre fixe la consigne, et la **vitesse d'un
 ventilateur** est modulée **continûment** (loi **proportionnelle**) pour ramener la
@@ -77,6 +79,13 @@ bash tests/run_alarme_test.sh                                       # FP6 LED (v
 **Rendu visuel interactif** : ouvrir le projet dans VS Code et lancer l'extension
 *Wokwi Simulator* (palette → « Wokwi: Start Simulator ») pour manipuler le potentiomètre
 et le curseur de température en temps réel.
+
+## Intégration continue
+
+À chaque `push`, [GitHub Actions](.github/workflows/ci.yml) compile le firmware et exécute
+le test unitaire natif de la régulation. Les tests d'intégration Wokwi s'exécutent en plus
+si le secret `WOKWI_CLI_TOKEN` est défini dans le dépôt (*Settings → Secrets and variables
+→ Actions*) ; sinon ils sont sautés et le job reste vert.
 
 ## Démarche d'ingénierie (cycle en V)
 
